@@ -1,0 +1,8 @@
+{
+    "token" : "YOUR_BOT_TOKEN_HERE",
+    "channels" : [
+        please copy your channel IDs,
+        where you want to broadcast new hltv articles,
+        as INTEGER format NOT STRING
+    ]
+}
