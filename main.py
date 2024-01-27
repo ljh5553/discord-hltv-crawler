@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 
 import hltv
+import crawl_timer
 
 import json
 import random
@@ -46,17 +47,22 @@ async def article_reload():
 
 @bot.command()
 async def ping(ctx):
-    await ctx.send("pong!")
+    await crawl_timer.crawl_timer(ctx)
 
 @bot.command()
-async def ongoing(ctx):
+async def ongoing(ctx, arg: str = None):
     match_infos = hltv.match.crawl_matches()
-    await hltv.match.send_ongoing_matches(ctx, match_infos)
+    await hltv.match.send_ongoing_matches(ctx, arg, match_infos)
 
 @bot.command()
-async def match(ctx, cnt : int = None):
+async def upcoming(ctx, arg: str = None):
     match_infos = hltv.match.crawl_matches()
-    await hltv.match.send_matches(ctx, cnt, match_infos)
+    await hltv.match.send_upcoming_matches(ctx, arg, match_infos)
+
+@bot.command()
+async def match(ctx, arg: str = None):
+    match_infos = hltv.match.crawl_matches()
+    await hltv.match.send_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def choose(ctx, *choices: str):
