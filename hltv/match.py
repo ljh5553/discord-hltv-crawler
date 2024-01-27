@@ -14,8 +14,8 @@ def crawl_matches():
     soup = BeautifulSoup(html, 'html.parser')
 
     matches_div = soup.find("div", {"class" : "top-border-hide"})
-    #print(matches_div)
     matches = matches_div.find_all("a", {"class" : "hotmatch-box a-reset"})
+
     for match in matches:
         title = match.attrs["title"].split("-")[-1].strip()
         
@@ -33,13 +33,11 @@ def crawl_matches():
         url = HLTV_MAIN + match.attrs["href"]
 
         stars_div = match.find("div", {"class" : re.compile(r'^teambox match')})
-
         stars_n = int(stars_div.attrs["stars"])
         stars = ""
         if stars_n == 0: pass
         else :
             for i in range(stars_n): stars += "*"
-
 
         match_infos.append({"match_title" : title,
                             "match_team1" : team1,
@@ -60,178 +58,156 @@ def star_filter(matches):
 
     return only_stars
 
+def extract_infos(match, time_flag : bool):
+    if time_flag:
+        event = str(match["match_title"])
+        team1 = str(match["match_team1"])
+        team2 = str(match["match_team2"])
+        time = str(match["match_time"])
+        url = str(match["match_url"])
+        stars = str(match["match_stars"])
+
+        return f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
+
+    else:
+        event = str(match["match_title"])
+        team1 = str(match["match_team1"])
+        team2 = str(match["match_team2"])
+        url = str(match["match_url"])
+        stars = str(match["match_stars"])
+
+        return f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"[Match Page](" + url + ")"}\n\n'
+
+def check_arg_type(arg):
+    if arg is None: return "none"
+    elif isinstance(arg, str) and arg.isdigit():
+        if int(arg) > 0 and int(arg) < 6: return "int_valid"
+        else: return "int_invalid"
+    elif arg == "*": return "*"
+    elif isinstance(arg, str): 
+        return "str"
+    else: return "error"
+
 async def send_ongoing_matches(ctx, arg, matches):
     ongoings = []
     msg = ""
+    arg_type = check_arg_type(arg)
 
     for match in matches:
         if match["match_time"] == "ONGOING":
             ongoings.append(match)
     
-    if ongoings:
-
-        if arg is None or arg.isdecimal():
-            cnt = 0
-        
-            if arg is None: arg = 5
-            else : arg = int(arg)
-
-            for ongoing in ongoings:
-
-                if cnt < arg:
-                    cnt += 1
-                else:
-                    break
-
-                event = str(ongoing["match_title"])
-                team1 = str(ongoing["match_team1"])
-                team2 = str(ongoing["match_team2"])
-                url = str(ongoing["match_url"])
-                stars = str(ongoing["match_stars"])
-
-                msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"[Match Page](" + url + ")"}\n\n'
-        
-        elif arg == "*":
-            cnt = 0
-
-            star_matches = star_filter(ongoings)
-            for ongoing in star_matches:
-
-                if cnt < 5:
-                    cnt += 1
-                else:
-                    break
-
-                event = str(ongoing["match_title"])
-                team1 = str(ongoing["match_team1"])
-                team2 = str(ongoing["match_team2"])
-                url = str(ongoing["match_url"])
-                stars = str(ongoing["match_stars"])
-
-                msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"[Match Page](" + url + ")"}\n\n'
-
-        else:
-            msg += "The given argument is not in right format. It should be number up to 5 or *"
-
-    else:
+    if not ongoings:
         msg = "There's no ongoing match"
+        await ctx.send(msg)
+        return
 
-    await ctx.send(msg)
+    if arg_type == "none" or arg_type == "int_valid":
+
+        if arg is None: arg = 5
+        else : arg = int(arg)
+
+        for cnt, ongoing in enumerate(ongoings):
+            if cnt >= arg: break
+            msg += extract_infos(ongoing, False)
+
+        await ctx.send(msg)
+        return
+    
+    elif arg_type == "*":
+
+        star_matches = star_filter(ongoings)
+
+        for cnt, ongoing in enumerate(star_matches):
+            if cnt >= 5: break
+            msg += extract_infos(ongoing, False)
+        
+        await ctx.send(msg)
+        return
+    
+    else:
+        msg = "The given argument is not in right format. It should be number up to 5 or *"
+        await ctx.send(msg)
+        return
 
 async def send_upcoming_matches(ctx, arg, matches):
     upcomings = []
     msg = ""
+    arg_type = check_arg_type(arg)
 
     for match in matches:
         if match["match_time"] != "ONGOING":
             upcomings.append(match)
     
-    if upcomings:
-        
-        if arg is None or arg.isdecimal():
-            cnt = 0
-        
-            if arg is None: arg = 5
-            else : arg = int(arg)
-
-            for upcoming in upcomings:
-
-                if cnt < arg:
-                    cnt += 1
-                else:
-                    break
-
-                event = str(upcoming["match_title"])
-                team1 = str(upcoming["match_team1"])
-                team2 = str(upcoming["match_team2"])
-                time = str(upcoming["match_time"])
-                url = str(upcoming["match_url"])
-                stars = str(upcoming["match_stars"])
-
-                msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
-            
-        elif arg == "*":
-            cnt = 0
-
-            star_matches = star_filter(upcomings)
-            for upcoming in star_matches:
-
-                if cnt < 5:
-                    cnt += 1
-                else:
-                    break
-
-                event = str(upcoming["match_title"])
-                team1 = str(upcoming["match_team1"])
-                team2 = str(upcoming["match_team2"])
-                time = str(upcoming["match_time"])
-                url = str(upcoming["match_url"])
-                stars = str(upcoming["match_stars"])
-
-                msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
-        
-        else:
-            msg += "The given argument is not in right format. It should be number up to 5 or *"
-
-    else:
-        msg += "There's no upcoming match"
-
-    await ctx.send(msg)
-
-async def send_matches(ctx, arg, matches):
-    msg = ""
-
-    if not matches:
-        await ctx.send("There's no upcoming match")
+    if not upcomings:
+        msg = "There's no upcoming match"
+        await ctx.send(msg)
         return
-
-    if arg is None or arg.isdecimal():
-        cnt = 0
         
+    if arg_type == "none" or arg_type == "int_valid":
+
         if arg is None: arg = 5
         else : arg = int(arg)
 
-        for match in matches:
+        for cnt, upcoming in enumerate(upcomings):
+            if cnt >= arg: break
+            msg += extract_infos(upcoming, True)
 
-            if cnt < arg and cnt < 5:
-                cnt += 1
-            else:
-                break
-
-            event = str(match["match_title"])
-            team1 = str(match["match_team1"])
-            team2 = str(match["match_team2"])
-            time = str(match["match_time"])
-            url = str(match["match_url"])
-            stars = str(match["match_stars"])
-
-            msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
-    
-    elif arg == "*":
-        cnt = 0
-
-        star_matches = star_filter(matches)
+        await ctx.send(msg)
+        return
         
-        for match in star_matches:
+    elif arg_type == "*":
 
-            if cnt < 5:
-                cnt += 1
-            else:
-                break
+        star_matches = star_filter(upcomings)
 
-            event = str(match["match_title"])
-            team1 = str(match["match_team1"])
-            team2 = str(match["match_team2"])
-            time = str(match["match_time"])
-            url = str(match["match_url"])
-            stars = str(match["match_stars"])
+        for cnt, upcoming in enumerate(star_matches):
+            if cnt >= 5: break
+            msg += extract_infos(upcoming, True)
 
-            msg += f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
+        await ctx.send(msg)
+        return
     
     else:
-        msg += "The given argument is not in right format. It should be number up to 5 or *"
+        msg = "The given argument is not in right format. It should be number up to 5 or *"
+        await ctx.send(msg)
+        return
+
+async def send_matches(ctx, arg, matches):
+    msg = ""
+    arg_type = check_arg_type(arg)
+
+    if not matches:
+        msg = "There's no upcoming match"
+        await ctx.send(msg)
+        return
+
+    if arg_type == "none" or arg_type == "int_valid":
+ 
+        if arg is None: arg = 5
+        else : arg = int(arg)
+
+        for cnt, match in enumerate(matches):
+            if cnt >= arg: break
+            msg += extract_infos(match, True)
+
+        await ctx.send(msg)
+        return
     
-    await ctx.send(msg)
+    elif arg_type == "*":
+        star_matches = star_filter(matches)
+        
+        for cnt, match in enumerate(star_matches):
+
+            if cnt >= 5: break
+            msg += extract_infos(match, True)
+        
+        await ctx.send(msg)
+        return
+    
+    else:
+        msg = "The given argument is not in right format. It should be number up to 5 or *"
+        await ctx.send(msg)
+        return
 
 if __name__ == "__main__":
     print(crawl_matches())
