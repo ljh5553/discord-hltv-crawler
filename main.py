@@ -72,4 +72,8 @@ async def choose(ctx, *choices: str):
 async def faze(ctx):
     await ctx.send(file=discord.File("faze.png"))
 
+@bot.command()
+async def github(ctx):
+    await ctx.send("github : https://github.com/ljh5553/discord-hltv-crawler")
+
 bot.run(TOKEN)
