@@ -9,8 +9,10 @@ def crawl_article():
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
 
-    main_div = soup.find("div", {"class" : "standard-box standard-list"})
-    #title = article_div.find("div", {"class" : "newstext"}).text
+    if soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
+        main_div = soup.find_all("div", {"class" : "standard-box standard-list"})[1]
+    else: # there is no live update (normal situation)
+        main_div = soup.find("div", {"class" : "standard-box standard-list"})
     link = main_div.find("a").attrs["href"]
 
     url = HLTV_MAIN + link
@@ -19,6 +21,7 @@ def crawl_article():
     soup = BeautifulSoup(html, 'html.parser')
 
     article_div = soup.find("article", {"class" : "newsitem standard-box"})
+    #print(article_div)
     title = article_div.find("h1", {"class" : "headline"}).text
     header = article_div.find("p", {"class" : "headertext"}).text
 
