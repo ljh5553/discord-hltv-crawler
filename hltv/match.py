@@ -17,7 +17,9 @@ def crawl_matches():
     matches = matches_div.find_all("a", {"class" : "hotmatch-box a-reset"})
 
     for match in matches:
-        title = match.attrs["title"].split("-")[-1].strip()
+        title_temp = match.attrs["title"].split("-")
+        del title_temp[0]
+        title = "-".join(title_temp).strip()
         
         team1 = team2 = "TBA"
         if match.select(".team"):
