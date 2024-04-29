@@ -6,6 +6,7 @@ import crawl_timer
 
 import json
 import random
+import time
 
 last_title = ""
 TOKEN = ""
@@ -33,9 +34,13 @@ async def on_ready():
 async def article_reload():
     global last_title
     new_article = hltv.article.crawl_article()
+    now = time
 
-    if new_article["article_title"] != last_title:
-        print("NEW ARTICLE DETECTED. - %s" % new_article["article_title"])
+    if new_article is None:
+        print("[%s] Article returned NoneType" % now.strftime('%m-%d %H:%M:%S'))
+
+    elif new_article["article_title"] != last_title:
+        print("[%s] New article detected - %s" % (now.strftime('%m-%d %H:%M:%S'), new_article["article_title"]))
         for guild in bot.guilds:
             for channel in guild.channels:
                 if channel.id in boradcast_channels:
@@ -43,7 +48,7 @@ async def article_reload():
                     last_title = new_article["article_title"]
     
     else:
-        print("THERE'S NO NEW ARTICLE")
+        print("There's no new article")
 
 @bot.command()
 async def ping(ctx):

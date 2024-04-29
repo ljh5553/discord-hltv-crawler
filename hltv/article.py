@@ -20,9 +20,12 @@ def crawl_article():
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
 
-    article_div = soup.find("article", {"class" : "newsitem standard-box"})
-    title = article_div.find("h1", {"class" : "headline"}).text
-    header = article_div.find("p", {"class" : "headertext"}).text
+    try:
+        article_div = soup.find("article", {"class" : "newsitem standard-box"})
+        title = article_div.find("h1", {"class" : "headline"}).text
+        header = article_div.find("p", {"class" : "headertext"}).text
+    except AttributeError:
+        return None
 
     return {"article_title" : title, "article_header" : header, "article_url" : url}
 
