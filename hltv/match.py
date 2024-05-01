@@ -18,7 +18,7 @@ def crawl_matches():
 
     for match in matches:
 
-        hltv_re = re.compile(r"HLTV")
+        hltv_re = re.compile(r"HLTV|playing")
 
         title_temp = match.attrs["title"]
         if hltv_re.search(title_temp):
