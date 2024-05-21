@@ -9,11 +9,9 @@ def crawl_article():
         res = requests.get(HLTV_MAIN, headers=headers)
         html = res.text
         soup = BeautifulSoup(html, 'html.parser')
-
-        """
+        
         if "Just a moment" in soup.find("title").string:
             return -1
-        """
         
         if soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
             main_div = soup.find_all("div", {"class" : "standard-box standard-list"})[1]

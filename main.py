@@ -39,6 +39,9 @@ async def article_reload():
     if new_article is None:
         print("[%s] Article returned NoneType" % now.strftime('%m-%d %H:%M:%S'))
 
+    elif new_article == -1:
+        print("[%s] Cloudflare block detected" % now.strftime('%m-%d %H:%M:%S'))
+        
     elif new_article["article_title"] != last_title:
         print("[%s] New article detected - %s" % (now.strftime('%m-%d %H:%M:%S'), new_article["article_title"]))
         for guild in bot.guilds:
