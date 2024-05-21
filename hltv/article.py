@@ -10,6 +10,9 @@ def crawl_article():
         html = res.text
         soup = BeautifulSoup(html, 'html.parser')
 
+        if "Just a moment" in soup.find("title").string:
+            return -1
+        
         if soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
             main_div = soup.find_all("div", {"class" : "standard-box standard-list"})[1]
         else: # there is no live update (normal situation)
@@ -25,6 +28,7 @@ def crawl_article():
         article_div = soup.find("article", {"class" : "newsitem standard-box"})
         title = article_div.find("h1", {"class" : "headline"}).text
         header = article_div.find("p", {"class" : "headertext"}).text
+
     except AttributeError:
         return None
 
@@ -39,4 +43,10 @@ async def broadcast_article(channel, news):
 
 if __name__ == "__main__":
     info = crawl_article()
-    print(f'title : {info["article_title"]}\nheader : {info["article_header"]}\nurl : {info["article_url"]}')
+
+    if info is None:
+        print("info is None")
+    elif info == -1:
+        print("cloudflare block detected")
+    else:
+        print(f'title : {info["article_title"]}\nheader : {info["article_header"]}\nurl : {info["article_url"]}')
