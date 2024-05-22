@@ -1,4 +1,5 @@
 import requests
+import cloudscraper
 import datetime
 import re
 from bs4 import BeautifulSoup
@@ -8,8 +9,10 @@ def crawl_matches():
 
     match_infos = []
 
-    headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-    res = requests.get(HLTV_MAIN, headers=headers)
+    #headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+    #res = requests.get(HLTV_MAIN, headers=headers)
+    scraper = cloudscraper.create_scraper()
+    res = scraper.get(HLTV_MAIN)
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
 

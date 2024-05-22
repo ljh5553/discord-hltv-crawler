@@ -30,7 +30,7 @@ async def on_ready():
     
     article_reload.start()
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=1)
 async def article_reload():
     global last_title
     new_article = hltv.article.crawl_article()

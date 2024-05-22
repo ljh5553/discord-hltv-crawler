@@ -1,15 +1,18 @@
 import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 
 def crawl_article():
     HLTV_MAIN = 'https://hltv.org'
 
     try:
-        headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        res = requests.get(HLTV_MAIN, headers=headers)
+        #headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        #res = requests.get(HLTV_MAIN, headers=headers)
+        scraper = cloudscraper.create_scraper()
+        res = scraper.get(HLTV_MAIN)
         html = res.text
         soup = BeautifulSoup(html, 'html.parser')
-        
+
         if "Just a moment" in soup.find("title").string:
             return -1
         
@@ -21,7 +24,8 @@ def crawl_article():
         link = main_div.find("a").attrs["href"]
 
         url = HLTV_MAIN + link
-        res = requests.get(url, headers=headers)
+        #res = requests.get(url, headers=headers)
+        res = scraper.get(url)
         html = res.text
         soup = BeautifulSoup(html, 'html.parser')
 
