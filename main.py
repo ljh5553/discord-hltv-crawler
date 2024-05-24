@@ -51,7 +51,7 @@ async def article_reload():
                     last_title = new_article["article_title"]
     
     else:
-        print("There's no new article")
+        print("[%s] There's no new article" % now.strftime('%m-%d %H:%M:%S'))
 
 @bot.command()
 async def ping(ctx):
