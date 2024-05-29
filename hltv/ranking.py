@@ -70,7 +70,6 @@ async def send_rankings(ctx, arg):
             if cnt >= 5: break
             msg += extract_infos(ranking)
 
-    print(msg)
     await ctx.send(msg)
     return
 
