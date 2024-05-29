@@ -1,42 +1,46 @@
-import requests
 import cloudscraper
 from bs4 import BeautifulSoup
+
+def scrap_website(link):
+    scraper = cloudscraper.create_scraper()
+    res = scraper.get(link)
+    html = res.text
+    soup = BeautifulSoup(html, 'html.parser')
+    return soup
 
 def crawl_article():
     HLTV_MAIN = 'https://hltv.org'
 
+    main_soup = scrap_website(HLTV_MAIN)
+
+    if "Just a moment" in main_soup.find("title").string:
+        return -1
+
     try:
-        #headers = {"User-Agent" : "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
-        #res = requests.get(HLTV_MAIN, headers=headers)
-        scraper = cloudscraper.create_scraper()
-        res = scraper.get(HLTV_MAIN)
-        html = res.text
-        soup = BeautifulSoup(html, 'html.parser')
-
-        if "Just a moment" in soup.find("title").string:
-            return -1
-        
-        if soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
-            main_div = soup.find_all("div", {"class" : "standard-box standard-list"})[1]
+        if main_soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
+            main_div = main_soup.find_all("div", {"class" : "standard-box standard-list"})[1]
         else: # there is no live update (normal situation)
-            main_div = soup.find("div", {"class" : "standard-box standard-list"})
+            main_div = main_soup.find("div", {"class" : "standard-box standard-list"})
 
-        link = main_div.find("a").attrs["href"]
-
-        url = HLTV_MAIN + link
-        #res = requests.get(url, headers=headers)
-        res = scraper.get(url)
-        html = res.text
-        soup = BeautifulSoup(html, 'html.parser')
-
-        article_div = soup.find("article", {"class" : "newsitem standard-box"})
-        title = article_div.find("h1", {"class" : "headline"}).text
-        header = article_div.find("p", {"class" : "headertext"}).text
-
+        link_main = HLTV_MAIN + main_div.find("a").attrs["href"]
+        link_sub = HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
     except AttributeError:
         return None
 
-    return {"article_title" : title, "article_header" : header, "article_url" : url}
+    article_soup = scrap_website(link_main)
+    article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
+
+    if article_div.find("h1", {"class" : "headline"}) is not None: #first article is NOT short news
+        title = article_div.find("h1", {"class" : "headline"}).text
+        header = article_div.find("p", {"class" : "headertext"}).text
+        return {"article_title" : title, "article_header" : header, "article_url" : link_main}
+    
+    else: #first article is short news
+        article_soup = scrap_website(link_sub)
+        article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
+        title = article_div.find("h1", {"class" : "headline"}).text
+        header = article_div.find("p", {"class" : "headertext"}).text
+        return {"article_title" : title, "article_header" : header, "article_url" : link_sub}
 
 async def broadcast_article(channel, news):
     title = str(news["article_title"])
