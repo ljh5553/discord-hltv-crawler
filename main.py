@@ -73,6 +73,10 @@ async def match(ctx, arg: str = None):
     await hltv.match.send_matches(ctx, arg, match_infos)
 
 @bot.command()
+async def ranking(ctx, arg: str = None):
+    await hltv.ranking.send_rankings(ctx, arg)
+    
+@bot.command()
 async def choose(ctx, *choices: str):
     await ctx.send(random.choice(choices))
 
