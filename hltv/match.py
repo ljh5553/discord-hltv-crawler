@@ -11,7 +11,7 @@ def scrap_website(link):
     return soup
 
 def crawl_matches():
-    HLTV_MAIN = 'https://hltv.org'
+    HLTV_MAIN = 'http://hltv.org'
 
     match_infos = []
 

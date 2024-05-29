@@ -9,7 +9,7 @@ def scrap_website(link):
     return soup
 
 def crawl_article():
-    HLTV_MAIN = 'https://hltv.org'
+    HLTV_MAIN = 'http://hltv.org'
 
     main_soup = scrap_website(HLTV_MAIN)
 
