@@ -47,7 +47,7 @@ async def article_reload():
         print("[%s] Cloudflare block detected" % now.strftime('%m-%d %H:%M:%S'))
 
     elif new_article == -2:
-        print("[%s] Page request timeout" % now.strftime('%m-%d %H:%M:%S'))
+        print("[%s] Article page request timeout" % now.strftime('%m-%d %H:%M:%S'))
         
     elif new_article["article_title"] != last_title:
         print("[%s] New article detected - %s" % (now.strftime('%m-%d %H:%M:%S'), new_article["article_title"]))
@@ -69,18 +69,33 @@ async def ping(ctx):
 async def ongoing(ctx, arg: str = None):
     timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
+    if match_infos == "timeout":
+        now = time
+        print("[%s] Timed out while bring match information" % now.strftime('%m-%d %H:%M:%S'))
+        await ctx.send("Timed out while bring match information. Try later")
+        return
     await hltv.match.send_ongoing_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def upcoming(ctx, arg: str = None):
     timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
+    if match_infos == "timeout":
+        now = time
+        print("[%s] Timed out while bring match information" % now.strftime('%m-%d %H:%M:%S'))
+        await ctx.send("Timed out while bring match information. Try later")
+        return
     await hltv.match.send_upcoming_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def match(ctx, arg: str = None):
     timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
+    if match_infos == "timeout":
+        now = time
+        print("[%s] Timed out while bring match information" % now.strftime('%m-%d %H:%M:%S'))
+        await ctx.send("Timed out while bring match information. Try later")
+        return
     await hltv.match.send_matches(ctx, arg, match_infos)
 
 @bot.command()
@@ -89,6 +104,11 @@ async def ranking(ctx, arg: str = None):
     
     if arg is None:
         pages = hltv.ranking.return_rankings_nonetype()
+        if pages == "timeout":
+            now = time
+            print("[%s] Timed out while bring ranking information" % now.strftime('%m-%d %H:%M:%S'))
+            await ctx.send("Timed out while bring ranking information. Try later")
+            return
 
         msg = await ctx.send(embed = pages[0])
         await msg.add_reaction('⏮')

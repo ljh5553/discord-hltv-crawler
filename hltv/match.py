@@ -1,11 +1,13 @@
+import requests
 import cloudscraper
 import datetime
 import re
 from bs4 import BeautifulSoup
 
 def scrap_website(link):
+    timeout = 10
     scraper = cloudscraper.create_scraper()
-    res = scraper.get(link)
+    res = scraper.get(link, timeout = timeout)
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
     return soup
@@ -15,7 +17,10 @@ def crawl_matches():
 
     match_infos = []
 
-    soup = scrap_website(HLTV_MAIN)
+    try:
+        soup = scrap_website(HLTV_MAIN)
+    except requests.exceptions.ReadTimeout:
+        return "timeout"
 
     matches_div = soup.find("div", {"class" : "top-border-hide"})
     matches = matches_div.find_all("a", {"class" : "hotmatch-box a-reset"})

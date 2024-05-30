@@ -1,11 +1,13 @@
+import requests
 import cloudscraper
 import re
 import discord
 from bs4 import BeautifulSoup
 
 def scrap_website(link):
+    timeout = 10
     scraper = cloudscraper.create_scraper()
-    res = scraper.get(link)
+    res = scraper.get(link, timeout = timeout)
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
     return soup
@@ -16,7 +18,11 @@ def crawl_ranking():
 
     ranking_infos = []
 
-    ranking_soup = scrap_website(HLTV_RANKING)
+    try:
+        ranking_soup = scrap_website(HLTV_RANKING)
+    except requests.exceptions.ReadTimeout:
+        return "timeout"
+    
     rankings = ranking_soup.find_all("div", {"class" : "ranked-team standard-box"})
     
     for ranking in rankings:
@@ -56,6 +62,7 @@ def return_rankings_nonetype():
     ranking_cnt = 0
 
     rankings = crawl_ranking()
+    if rankings == "timeout": return "timeout"
     
     for page_number in range(6):
         embed = discord.Embed(title = "HLTV RANKING", url = "https://hltv.org/ranking/teams", color = 0xFFF300)

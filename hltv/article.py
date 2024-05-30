@@ -4,11 +4,9 @@ import re
 from bs4 import BeautifulSoup
 
 def scrap_website(link):
+    timeout = 10
     scraper = cloudscraper.create_scraper()
-    try:
-        res = scraper.get(link, timeout = 30)
-    except requests.exceptions.ReadTimeout:
-        return None
+    res = scraper.get(link, timeout = timeout)
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
     return soup
@@ -17,8 +15,10 @@ def crawl_article():
     HLTV_MAIN = 'http://hltv.org'
     link = ''
 
-    main_soup = scrap_website(HLTV_MAIN)
-    if main_soup is None : return -2
+    try:
+        main_soup = scrap_website(HLTV_MAIN)
+    except requests.exceptions.ReadTimeout:
+        return -2
 
     if "Just a moment" in main_soup.find("title").string:
         return -1
@@ -40,12 +40,19 @@ def crawl_article():
         # link_sub = HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
     except AttributeError:
         return None
+    
+    try:
+        article_soup = scrap_website(link)
+    except requests.exceptions.ReadTimeout:
+        return -2
+    
+    try:
+        article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
+        title = article_div.find("h1", {"class" : "headline"}).text
+        header = article_div.find("p", {"class" : "headertext"}).text
+    except AttributeError:
+        return None
 
-    article_soup = scrap_website(link)
-    if article_soup is None : return -2
-    article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
-    title = article_div.find("h1", {"class" : "headline"}).text
-    header = article_div.find("p", {"class" : "headertext"}).text
     return {"article_title" : title, "article_header" : header, "article_url" : link}
 
     # if article_div.find("h1", {"class" : "headline"}) is not None: #first article is NOT short news
