@@ -45,6 +45,9 @@ async def article_reload():
 
     elif new_article == -1:
         print("[%s] Cloudflare block detected" % now.strftime('%m-%d %H:%M:%S'))
+
+    elif new_article == -2:
+        print("[%s] Page request timeout" % now.strftime('%m-%d %H:%M:%S'))
         
     elif new_article["article_title"] != last_title:
         print("[%s] New article detected - %s" % (now.strftime('%m-%d %H:%M:%S'), new_article["article_title"]))

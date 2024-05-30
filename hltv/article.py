@@ -1,17 +1,24 @@
+import requests
 import cloudscraper
+import re
 from bs4 import BeautifulSoup
 
 def scrap_website(link):
     scraper = cloudscraper.create_scraper()
-    res = scraper.get(link)
+    try:
+        res = scraper.get(link, timeout = 30)
+    except requests.exceptions.ReadTimeout:
+        return None
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
     return soup
 
 def crawl_article():
     HLTV_MAIN = 'http://hltv.org'
+    link = ''
 
     main_soup = scrap_website(HLTV_MAIN)
+    if main_soup is None : return -2
 
     if "Just a moment" in main_soup.find("title").string:
         return -1
@@ -22,25 +29,36 @@ def crawl_article():
         else: # there is no live update (normal situation)
             main_div = main_soup.find("div", {"class" : "standard-box standard-list"})
 
-        link_main = HLTV_MAIN + main_div.find("a").attrs["href"]
-        link_sub = HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
+        short_re = re.compile('short:', re.IGNORECASE)
+        
+        if short_re.search(main_div.find("div", {"class" : "newstext"}).string):
+            link = HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
+        else:
+            link = HLTV_MAIN + main_div.find("a").attrs["href"]
+
+        # link_main = HLTV_MAIN + main_div.find("a").attrs["href"]
+        # link_sub = HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
     except AttributeError:
         return None
 
-    article_soup = scrap_website(link_main)
+    article_soup = scrap_website(link)
+    if article_soup is None : return -2
     article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
+    title = article_div.find("h1", {"class" : "headline"}).text
+    header = article_div.find("p", {"class" : "headertext"}).text
+    return {"article_title" : title, "article_header" : header, "article_url" : link}
 
-    if article_div.find("h1", {"class" : "headline"}) is not None: #first article is NOT short news
-        title = article_div.find("h1", {"class" : "headline"}).text
-        header = article_div.find("p", {"class" : "headertext"}).text
-        return {"article_title" : title, "article_header" : header, "article_url" : link_main}
+    # if article_div.find("h1", {"class" : "headline"}) is not None: #first article is NOT short news
+    #     title = article_div.find("h1", {"class" : "headline"}).text
+    #     header = article_div.find("p", {"class" : "headertext"}).text
+    #     return {"article_title" : title, "article_header" : header, "article_url" : link_main}
     
-    else: #first article is short news
-        article_soup = scrap_website(link_sub)
-        article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
-        title = article_div.find("h1", {"class" : "headline"}).text
-        header = article_div.find("p", {"class" : "headertext"}).text
-        return {"article_title" : title, "article_header" : header, "article_url" : link_sub}
+    # else: #first article is short news
+    #     article_soup = scrap_website(link_sub)
+    #     article_div = article_soup.find("article", {"class" : "newsitem standard-box"})
+    #     title = article_div.find("h1", {"class" : "headline"}).text
+    #     header = article_div.find("p", {"class" : "headertext"}).text
+    #     return {"article_title" : title, "article_header" : header, "article_url" : link_sub}
 
 async def broadcast_article(channel, news):
     title = str(news["article_title"])
@@ -56,5 +74,7 @@ if __name__ == "__main__":
         print("info is None")
     elif info == -1:
         print("cloudflare block detected")
+    elif info == -2:
+        print("Page request timeout")
     else:
         print(f'title : {info["article_title"]}\nheader : {info["article_header"]}\nurl : {info["article_url"]}')
