@@ -24,6 +24,10 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+def timestamp(ctx):
+    now = time
+    print("[%s] %s requested %s" % (now.strftime('%m-%d %H:%M:%S'), ctx.message.author, ctx.message.content))
+
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
@@ -55,37 +59,87 @@ async def article_reload():
 
 @bot.command()
 async def ping(ctx):
+    timestamp(ctx)
     await crawl_timer.crawl_timer(ctx)
 
 @bot.command()
 async def ongoing(ctx, arg: str = None):
+    timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
     await hltv.match.send_ongoing_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def upcoming(ctx, arg: str = None):
+    timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
     await hltv.match.send_upcoming_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def match(ctx, arg: str = None):
+    timestamp(ctx)
     match_infos = hltv.match.crawl_matches()
     await hltv.match.send_matches(ctx, arg, match_infos)
 
 @bot.command()
 async def ranking(ctx, arg: str = None):
-    await hltv.ranking.send_rankings(ctx, arg)
+    timestamp(ctx)
+    
+    if arg is None:
+        pages = hltv.ranking.return_rankings_nonetype()
+
+        msg = await ctx.send(embed = pages[0])
+        await msg.add_reaction('⏮')
+        await msg.add_reaction('◀')
+        await msg.add_reaction('▶')
+        await msg.add_reaction('⏭')
+
+        def check(reaction, user):
+            return user == ctx.author
+        
+        page_idx = 0
+        reaction = None
+
+        while True:
+            if str(reaction) == '⏮':
+                page_idx = 0
+                await msg.edit(embed = pages[page_idx])
+
+            elif str(reaction) == '◀':
+                if page_idx > 0:
+                    page_idx -= 1
+                    await msg.edit(embed = pages[page_idx])
+                    
+            elif str(reaction) == '▶':
+                if page_idx < 5:
+                    page_idx += 1
+                    await msg.edit(embed = pages[page_idx])
+
+            elif str(reaction) == '⏭':
+                page_idx = 5
+                await msg.edit(embed = pages[page_idx])
+
+            try:
+                reaction, user = await bot.wait_for('reaction_add', timeout = 60.0, check = check)
+                await msg.remove_reaction(reaction, user)
+            except:
+                break
+
+        await msg.clear_reactions()
+
     
 @bot.command()
 async def choose(ctx, *choices: str):
+    timestamp(ctx)
     await ctx.send(random.choice(choices))
 
 @bot.command()
 async def faze(ctx):
+    timestamp(ctx)
     await ctx.send(file=discord.File("faze.png"))
 
 @bot.command()
 async def github(ctx):
+    timestamp(ctx)
     await ctx.send("github : https://github.com/ljh5553/discord-hltv-crawler")
 
 bot.run(TOKEN)

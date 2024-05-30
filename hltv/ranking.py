@@ -1,5 +1,6 @@
 import cloudscraper
 import re
+import discord
 from bs4 import BeautifulSoup
 
 def scrap_website(link):
@@ -50,28 +51,36 @@ def extract_infos(ranking):
 
     return result_string
 
-def check_arg_type(arg):
-    if arg is None: return "none"
-    elif isinstance(arg, str) and arg.isdigit():
-        if int(arg) > 0 and int(arg) < 31: return "int_valid"
-        else: return "int_invalid"
-    elif isinstance(arg, str): 
-        return "str"
-    else: return "error"
+def return_rankings_nonetype():
+    pages = []
+    ranking_cnt = 0
 
-async def send_rankings(ctx, arg):
-    msg = "### HLTV RANKING\n"
-    arg_type = check_arg_type(arg)
+    rankings = crawl_ranking()
+    
+    for page_number in range(6):
+        embed = discord.Embed(title = "HLTV RANKING", url = "https://hltv.org/ranking/teams", color = 0xFFF300)
 
-    if arg_type == "none":
-        rankings = crawl_ranking()
+        for idx in range(ranking_cnt, ranking_cnt + 5):
+            rank_number = rankings[idx]["rank_number"]
+            team_name = rankings[idx]["team_name"]
+            rank_point = rankings[idx]["rank_point"]
+            player_infos = rankings[idx]["player_infos"]
 
-        for cnt, ranking in enumerate(rankings):
-            if cnt >= 5: break
-            msg += extract_infos(ranking)
+            field_name = rank_number + "  " + team_name + "  (" + rank_point + "p)"
+            field_value = ""
+            for cnt, player_info in enumerate(player_infos):
+                field_value += player_info["player_nick"]
+                if cnt != 4: field_value += " • "
 
-    await ctx.send(msg)
-    return
+            embed.add_field(name = field_name, value = field_value, inline= False)
+        
+        page_str = "page " + str(page_number + 1) + "/6"
+        embed.set_footer(text = page_str)
+
+        pages.append(embed)
+        ranking_cnt += 5
+
+    return pages
 
 if __name__ == "__main__":
     rankings = crawl_ranking()
