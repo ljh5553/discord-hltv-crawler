@@ -1,28 +1,8 @@
-import requests
-import cloudscraper
 import re
 import discord
-from bs4 import BeautifulSoup
 
-def scrap_website(link):
-    timeout = 10
-    scraper = cloudscraper.create_scraper()
-    res = scraper.get(link, timeout = timeout)
-    html = res.text
-    soup = BeautifulSoup(html, 'html.parser')
-    return soup
-
-def crawl_ranking():
-    HLTV_MAIN = 'http://hltv.org'
-    HLTV_RANKING = 'http://hltv.org/ranking/teams'
-
+def parse_ranking_all(ranking_soup):
     ranking_infos = []
-
-    try:
-        ranking_soup = scrap_website(HLTV_RANKING)
-    except requests.exceptions.ReadTimeout:
-        return "timeout"
-    
     rankings = ranking_soup.find_all("div", {"class" : "ranked-team standard-box"})
     
     for ranking in rankings:
@@ -35,16 +15,12 @@ def crawl_ranking():
         players = ranking.find_all("td", {"class" : "player-holder"})
         for player in players:
             player_nick = player.find("div", {"class" : "nick"}).contents[1]
-            player_link = HLTV_MAIN + player.find("a").attrs["href"]
-            player_infos.append({"player_nick" : player_nick, "player_link" : player_link})
+            player_infos.append(player_nick)
 
-        team_link = HLTV_MAIN + ranking.find("a", {"class" : "moreLink"}).attrs["href"]
-        
         ranking_infos.append({"rank_number" : rank_number,
                               "team_name" : team_name,
                               "rank_point" : rank_point,
-                              "player_infos" : player_infos,
-                              "team_link" : team_link})
+                              "player_infos" : player_infos})
         
     return ranking_infos
         
@@ -57,12 +33,11 @@ def extract_infos(ranking):
 
     return result_string
 
-def return_rankings_nonetype():
+def rankings_nonetype(ranking_soup):
     pages = []
     ranking_cnt = 0
 
-    rankings = crawl_ranking()
-    if rankings == "timeout": return "timeout"
+    rankings = parse_ranking_all(ranking_soup)
     
     for page_number in range(6):
         embed = discord.Embed(title = "HLTV RANKING", url = "https://hltv.org/ranking/teams", color = 0xFFF300)
@@ -76,7 +51,7 @@ def return_rankings_nonetype():
             field_name = rank_number + "  " + team_name + "  (" + rank_point + "p)"
             field_value = ""
             for cnt, player_info in enumerate(player_infos):
-                field_value += player_info["player_nick"]
+                field_value += player_info
                 if cnt != 4: field_value += " • "
 
             embed.add_field(name = field_name, value = field_value, inline= False)
@@ -88,8 +63,3 @@ def return_rankings_nonetype():
         ranking_cnt += 5
 
     return pages
-
-if __name__ == "__main__":
-    rankings = crawl_ranking()
-    for ranking in rankings:
-        print(extract_infos(ranking))

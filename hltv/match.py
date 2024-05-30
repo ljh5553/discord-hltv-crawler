@@ -1,33 +1,19 @@
-import requests
-import cloudscraper
 import datetime
+import discord
 import re
-from bs4 import BeautifulSoup
 
-def scrap_website(link):
-    timeout = 10
-    scraper = cloudscraper.create_scraper()
-    res = scraper.get(link, timeout = timeout)
-    html = res.text
-    soup = BeautifulSoup(html, 'html.parser')
-    return soup
-
-def crawl_matches():
-    HLTV_MAIN = 'http://hltv.org'
-
+def parse_matches(main_soup):
     match_infos = []
+    matches = main_soup.find_all("a", {"class" : "hotmatch-box a-reset"})
 
-    try:
-        soup = scrap_website(HLTV_MAIN)
-    except requests.exceptions.ReadTimeout:
-        return "timeout"
-
-    matches_div = soup.find("div", {"class" : "top-border-hide"})
-    matches = matches_div.find_all("a", {"class" : "hotmatch-box a-reset"})
+    hltv_re = re.compile(r"HLTV|playing")
 
     for match in matches:
-
         hltv_re = re.compile(r"HLTV|playing")
+        hltvconfirmed_re = re.compile(r"hltv-confirmed")
+
+        if hltvconfirmed_re.search(match.attrs["href"]):
+            continue
 
         title_temp = match.attrs["title"]
         if hltv_re.search(title_temp):
@@ -43,13 +29,13 @@ def crawl_matches():
             team1 = match.select(".team")[0].text
             team2 = match.select(".team")[1].text
         
-        time = "ONGOING"
+        time = "ongoing"
         time_div = match.find("div", {"class" : "middleExtra"})
         if time_div:
             unixtime = time_div.attrs["data-unix"]
-            time = datetime.datetime.fromtimestamp(int(unixtime) // 1000)
+            time = datetime.datetime.fromtimestamp(int(unixtime) // 1000).strftime('%m/%d %H:%M')
         
-        url = HLTV_MAIN + match.attrs["href"]
+        url = "https://hltv.org" + match.attrs["href"]
 
         stars_div = match.find("div", {"class" : re.compile(r'^teambox match')})
         stars_n = int(stars_div.attrs["stars"])
@@ -70,163 +56,79 @@ def crawl_matches():
 
 def star_filter(matches):
     only_stars = []
-
     for match in matches:
-        if  "*" in str(match["match_stars"]):
+        if "*" in str(match["match_stars"]):
             only_stars.append(match)
-
     return only_stars
 
-def extract_infos(match, time_flag : bool):
-    if time_flag:
-        event = str(match["match_title"])
-        team1 = str(match["match_team1"])
-        team2 = str(match["match_team2"])
-        time = str(match["match_time"])
-        url = str(match["match_url"])
-        stars = str(match["match_stars"])
-
-        return f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"Start time (KST) : " + time}\n{"[Match Page](" + url + ")"}\n\n'
-
-    else:
-        event = str(match["match_title"])
-        team1 = str(match["match_team1"])
-        team2 = str(match["match_team2"])
-        url = str(match["match_url"])
-        stars = str(match["match_stars"])
-
-        return f'{"**" + event + "**"}\n{"* " + team1 + " vs. " + team2 + " " + stars}\n{"[Match Page](" + url + ")"}\n\n'
-
-def check_arg_type(arg):
-    if arg is None: return "none"
-    elif isinstance(arg, str) and arg.isdigit():
-        if int(arg) > 0 and int(arg) < 6: return "int_valid"
-        else: return "int_invalid"
-    elif arg == "*": return "*"
-    elif isinstance(arg, str): 
-        return "str"
-    else: return "error"
-
-async def send_ongoing_matches(ctx, arg, matches):
+def ongoing_filter(matches):
     ongoings = []
-    msg = ""
-    arg_type = check_arg_type(arg)
-
     for match in matches:
-        if match["match_time"] == "ONGOING":
+        if match["match_time"] == "ongoing":
             ongoings.append(match)
-    
-    if not ongoings:
-        msg = "There's no ongoing match"
-        await ctx.send(msg)
-        return
+    return ongoings
 
-    if arg_type == "none" or arg_type == "int_valid":
-
-        if arg is None: arg = 5
-        else : arg = int(arg)
-
-        for cnt, ongoing in enumerate(ongoings):
-            if cnt >= arg: break
-            msg += extract_infos(ongoing, False)
-
-        await ctx.send(msg)
-        return
-    
-    elif arg_type == "*":
-
-        star_matches = star_filter(ongoings)
-
-        for cnt, ongoing in enumerate(star_matches):
-            if cnt >= 5: break
-            msg += extract_infos(ongoing, False)
-        
-        await ctx.send(msg)
-        return
-    
-    else:
-        msg = "The given argument is not in right format. It should be number up to 5 or *"
-        await ctx.send(msg)
-        return
-
-async def send_upcoming_matches(ctx, arg, matches):
+def upcoming_filter(matches):
     upcomings = []
-    msg = ""
-    arg_type = check_arg_type(arg)
-
     for match in matches:
-        if match["match_time"] != "ONGOING":
+        if match["match_time"] != "ongoing":
             upcomings.append(match)
+    return upcomings
+
+def modify_length(matches, num):
+    if len(matches) <= num or num <= 0: return matches
+    return matches[:num]
     
-    if not upcomings:
-        msg = "There's no upcoming match"
-        await ctx.send(msg)
-        return
-        
-    if arg_type == "none" or arg_type == "int_valid":
+def matches_multipage(match_infos, cmdtype : str, arg = None):
+    pages = []
+    matches_cnt = 0
 
-        if arg is None: arg = 5
-        else : arg = int(arg)
-
-        for cnt, upcoming in enumerate(upcomings):
-            if cnt >= arg: break
-            msg += extract_infos(upcoming, True)
-
-        await ctx.send(msg)
-        return
-        
-    elif arg_type == "*":
-
-        star_matches = star_filter(upcomings)
-
-        for cnt, upcoming in enumerate(star_matches):
-            if cnt >= 5: break
-            msg += extract_infos(upcoming, True)
-
-        await ctx.send(msg)
-        return
+    if cmdtype == "match":
+        embedtitle = "CS2 Matches"
+        desc = "Ongoing and upcoming CS2 matches from HLTV.org"
+        color = 0xffffff
     
-    else:
-        msg = "The given argument is not in right format. It should be number up to 5 or *"
-        await ctx.send(msg)
-        return
+    elif cmdtype == "ongoing":
+        embedtitle = "Ongoing CS2 Matches"
+        desc = "Ongoing CS2 matches from HLTV.org"
+        color = 0x00ddff
+        match_infos = ongoing_filter(match_infos)
 
-async def send_matches(ctx, arg, matches):
-    msg = ""
-    arg_type = check_arg_type(arg)
+    elif cmdtype == "upcoming":
+        embedtitle = "Upcoming CS2 Matches"
+        desc = "Upcoming CS2 matches from HLTV.org"
+        color = 0xb7ff00
+        match_infos = upcoming_filter(match_infos)
 
-    if not matches:
-        msg = "There's no upcoming match"
-        await ctx.send(msg)
-        return
+    if arg is None : pass
+    elif arg.isdigit() : match_infos = modify_length(match_infos, int(arg))
+    elif arg == "*" : match_infos = star_filter(match_infos)
 
-    if arg_type == "none" or arg_type == "int_valid":
+    match_infos_len = len(match_infos)
+    pages_len = ((match_infos_len - 1) // 5) + 1
+
+    for page_number in range(pages_len):
+        embed = discord.Embed(title = embedtitle, description = desc, url = "https://www.hltv.org/matches", color = color)
  
-        if arg is None: arg = 5
-        else : arg = int(arg)
+        for idx in range(matches_cnt, matches_cnt + 5):
+            if idx >= match_infos_len: break
+            
+            title = match_infos[idx]["match_title"]
+            team1 = match_infos[idx]["match_team1"]
+            team2 = match_infos[idx]["match_team2"]
+            time = match_infos[idx]["match_time"]
+            url = match_infos[idx]["match_url"]
+            stars = match_infos[idx]["match_stars"]
 
-        for cnt, match in enumerate(matches):
-            if cnt >= arg: break
-            msg += extract_infos(match, True)
+            field_name = "%s %s vs. %s - %s" % (stars, team1, team2, title)
+            field_value = "%s - [%s](%s)" % (time,"Matchpage", url)
 
-        await ctx.send(msg)
-        return
-    
-    elif arg_type == "*":
-        star_matches = star_filter(matches)
+            embed.add_field(name = field_name, value = field_value, inline = False)
         
-        for cnt, match in enumerate(star_matches):
+        page_str = "page %s/%s" % (str(page_number + 1), pages_len)
+        embed.set_footer(text = page_str)
 
-            if cnt >= 5: break
-            msg += extract_infos(match, True)
-        
-        await ctx.send(msg)
-        return
+        pages.append(embed)
+        matches_cnt += 5
     
-    else:
-        msg = "The given argument is not in right format. It should be number up to 5 or *"
-        await ctx.send(msg)
-        return
-
-if __name__ == "__main__":
-    print(crawl_matches())
+    return pages
