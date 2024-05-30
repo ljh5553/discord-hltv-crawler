@@ -34,7 +34,7 @@ async def on_ready():
     
     article_reload.start()
 
-@tasks.loop(minutes=1)
+@tasks.loop(minutes=3)
 async def article_reload():
     global last_title
     new_article = hltv.article.crawl_article()
@@ -93,8 +93,8 @@ async def ranking(ctx, arg: str = None):
         await msg.add_reaction('▶')
         await msg.add_reaction('⏭')
 
-        def check(reaction, user):
-            return user == ctx.author
+        # def check(reaction, user):
+        #     return user == ctx.author
         
         page_idx = 0
         reaction = None
@@ -119,7 +119,7 @@ async def ranking(ctx, arg: str = None):
                 await msg.edit(embed = pages[page_idx])
 
             try:
-                reaction, user = await bot.wait_for('reaction_add', timeout = 60.0, check = check)
+                reaction, user = await bot.wait_for('reaction_add', timeout = 60.0)
                 await msg.remove_reaction(reaction, user)
             except:
                 break
