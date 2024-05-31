@@ -1,7 +1,7 @@
 import re
 import discord
 
-def parse_ranking_all(ranking_soup):
+def parse_rankings(ranking_soup):
     ranking_infos = []
     rankings = ranking_soup.find_all("div", {"class" : "ranked-team standard-box"})
     
@@ -23,40 +23,75 @@ def parse_ranking_all(ranking_soup):
                               "player_infos" : player_infos})
         
     return ranking_infos
-        
-def extract_infos(ranking):
-    result_string = f'{"* " + ranking["rank_number"] + " **" + ranking["team_name"] + "** (" + ranking["rank_point"] + "p) [Team Profile](<" + ranking["team_link"] + ">)"}\n * '
-    for cnt, player in enumerate(ranking["player_infos"]):
-        result_string += f'{"[" + player["player_nick"] + "](<" + player["player_link"] + ">) "}'
-        if cnt != 4: result_string += "| "
-    result_string += "\n"
 
-    return result_string
+def search_filter(rankings, arg):
+    search_results = []
+    arg_re = re.compile(arg, re.IGNORECASE)
+    for ranking in rankings:
+        if arg_re.search(ranking["team_name"]):
+            search_results.append(ranking)
+            continue
+        for player_nick in ranking["player_infos"]:
+            if arg_re.search(player_nick):
+                search_results.append(ranking)
+                break
+    return search_results
 
-def rankings_nonetype(ranking_soup):
+def modify_length(rankings, arg):
+    if isinstance(arg, int):
+        if len(rankings) <= arg or arg <= 0 : return rankings
+        return rankings[:arg]
+    
+    start, end = list(map(int, arg.split("~")))
+    if start <= 0 or end >= len(rankings) : return rankings
+    return rankings[(start - 1):end]
+
+def emptylist(embed_infos):
+    embed = discord.Embed(title = embed_infos["title"], description = embed_infos["desc"], url = "https://hltv.org/ranking/teams", color = embed_infos["color"])
+    embed.add_field(name = "No ranking information was found for the conditions", value = "", inline = False)
+    return embed
+
+def get_rankings(ranking_infos, arg = None):
     pages = []
+    embed_infos = {}
     ranking_cnt = 0
 
-    rankings = parse_ranking_all(ranking_soup)
+    if arg is None : pass
+    elif re.search(r'^[0-9]+~[0-9]+$', arg): ranking_infos = modify_length(ranking_infos, arg)
+    elif arg.isdigit() : ranking_infos = modify_length(ranking_infos, int(arg))
+    elif arg.isalnum() : ranking_infos = search_filter(ranking_infos, arg)
+    else : return None
+
+    embed_infos["title"] = "HLTV RANKING"
+    embed_infos["color"] = 0xFFF300
+
+    if not ranking_infos:
+        return emptylist(embed_infos)
     
-    for page_number in range(6):
-        embed = discord.Embed(title = "HLTV RANKING", url = "https://hltv.org/ranking/teams", color = 0xFFF300)
+    ranking_infos_len = len(ranking_infos)
+    pages_len = ((ranking_infos_len - 1) // 5) + 1
+
+    for page_number in range(pages_len):
+        embed = discord.Embed(title = embed_infos["title"], url = "https://hltv.org/ranking/teams", color = embed_infos["color"])
 
         for idx in range(ranking_cnt, ranking_cnt + 5):
-            rank_number = rankings[idx]["rank_number"]
-            team_name = rankings[idx]["team_name"]
-            rank_point = rankings[idx]["rank_point"]
-            player_infos = rankings[idx]["player_infos"]
+            if idx >= ranking_infos_len: break
 
-            field_name = rank_number + "  " + team_name + "  (" + rank_point + "p)"
+            rank_number = ranking_infos[idx]["rank_number"]
+            team_name = ranking_infos[idx]["team_name"]
+            rank_point = ranking_infos[idx]["rank_point"]
+            player_infos = ranking_infos[idx]["player_infos"]
+
+            field_name = "%s %s (%sp)" % (rank_number, team_name, rank_point)
             field_value = ""
+            player_infos_len = len(player_infos)
             for cnt, player_info in enumerate(player_infos):
                 field_value += player_info
-                if cnt != 4: field_value += " • "
+                if cnt != (player_infos_len - 1) : field_value += " • "
 
             embed.add_field(name = field_name, value = field_value, inline= False)
         
-        page_str = "page " + str(page_number + 1) + "/6"
+        page_str = "page %s/%s" % (str(page_number + 1), pages_len)
         embed.set_footer(text = page_str)
 
         pages.append(embed)

@@ -75,40 +75,66 @@ def upcoming_filter(matches):
             upcomings.append(match)
     return upcomings
 
+def search_filter(matches, arg):
+    search_results = []
+    arg_re = re.compile(arg, re.IGNORECASE)
+    for match in matches:
+        if arg_re.search(match["match_title"]) or arg_re.search(match["match_team1"]) or arg_re.search(match["match_team2"]):
+            search_results.append(match)
+    return search_results
+
 def modify_length(matches, num):
     if len(matches) <= num or num <= 0: return matches
     return matches[:num]
-    
-def matches_multipage(match_infos, cmdtype : str, arg = None):
-    pages = []
-    matches_cnt = 0
+
+def check_cmdtype(cmdtype, match_infos):
+    embed_infos = {}
 
     if cmdtype == "match":
-        embedtitle = "CS2 Matches"
-        desc = "Ongoing and upcoming CS2 matches from HLTV.org"
-        color = 0xffffff
+        embed_infos["title"] = "CS2 Matches"
+        embed_infos["desc"] = "Ongoing and upcoming CS2 matches from HLTV.org"
+        embed_infos["color"] = 0xffffff
     
     elif cmdtype == "ongoing":
-        embedtitle = "Ongoing CS2 Matches"
-        desc = "Ongoing CS2 matches from HLTV.org"
-        color = 0x00ddff
+        embed_infos["title"] = "Ongoing CS2 Matches"
+        embed_infos["desc"] = "Ongoing CS2 matches from HLTV.org"
+        embed_infos["color"] = 0x00ddff
         match_infos = ongoing_filter(match_infos)
 
     elif cmdtype == "upcoming":
-        embedtitle = "Upcoming CS2 Matches"
-        desc = "Upcoming CS2 matches from HLTV.org"
-        color = 0xb7ff00
+        embed_infos["title"] = "Upcoming CS2 Matches"
+        embed_infos["desc"] = "Upcoming CS2 matches from HLTV.org"
+        embed_infos["color"] = 0xb7ff00
         match_infos = upcoming_filter(match_infos)
+
+    return embed_infos, match_infos
+
+def emptylist(embed_infos):
+    embed = discord.Embed(title = embed_infos["title"], description = embed_infos["desc"], url = "https://www.hltv.org/matches", color = embed_infos["color"])
+    embed.add_field(name = "No match was found for the conditions", value = "", inline = False)
+    return embed
+    
+def get_matches(match_infos, cmdtype : str, arg = None):
+    pages = []
+    embed_infos = {}
+    matches_cnt = 0
+
+    embed_infos, match_infos = check_cmdtype(cmdtype, match_infos)
 
     if arg is None : pass
     elif arg.isdigit() : match_infos = modify_length(match_infos, int(arg))
     elif arg == "*" : match_infos = star_filter(match_infos)
+    elif arg.isalnum() : match_infos = search_filter(match_infos, arg)
+    else : return None
+
+    if not match_infos:
+        return emptylist(embed_infos)
 
     match_infos_len = len(match_infos)
     pages_len = ((match_infos_len - 1) // 5) + 1
 
     for page_number in range(pages_len):
-        embed = discord.Embed(title = embedtitle, description = desc, url = "https://www.hltv.org/matches", color = color)
+        embed = discord.Embed(title = embed_infos["title"], description = embed_infos["desc"], url = "https://www.hltv.org/matches", color = embed_infos["color"])
  
         for idx in range(matches_cnt, matches_cnt + 5):
             if idx >= match_infos_len: break
