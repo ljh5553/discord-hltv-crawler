@@ -47,7 +47,7 @@ def modify_length(rankings, arg):
     return rankings[(start - 1):end]
 
 def emptylist(embed_infos):
-    embed = discord.Embed(title = embed_infos["title"], description = embed_infos["desc"], url = "https://hltv.org/ranking/teams", color = embed_infos["color"])
+    embed = discord.Embed(title = embed_infos["title"], url = "https://hltv.org/ranking/teams", color = embed_infos["color"])
     embed.add_field(name = "No ranking information was found for the conditions", value = "", inline = False)
     return embed
 
