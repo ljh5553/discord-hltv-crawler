@@ -40,8 +40,7 @@ def parse_matches(main_soup):
         stars_div = match.find("div", {"class" : re.compile(r'^teambox match')})
         stars_n = int(stars_div.attrs["stars"])
         stars = ""
-        if stars_n == 0: pass
-        else :
+        if stars_n != 0:
             for i in range(stars_n): stars += "*"
 
         match_infos.append({"match_title" : title,
