@@ -26,5 +26,5 @@ Discord bot for getting match, ranking, news from [HLTV.org](HLTV.org)
 ## 4. FAQ
 
  > Q. Program is dead while running.
-
- > A. There is a critical flaw by HTTP connection pool exception. It occurs when you run this bot for long time(i estimate it is about 5 days). I really did a lot of googling to fix this. But i am sorry, i am too shit to fix this error.
+ >
+ >A. There is a critical flaw by HTTP connection pool exception. It occurs when you run this bot for long time(i estimate it is about 5 days). I really did a lot of googling to fix this. But i am sorry, i am too shit to fix this error.
