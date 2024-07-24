@@ -1,5 +1,5 @@
 # Discord HLTV crawler
-Discord bot for getting match, ranking, news from [HLTV.org](HLTV.org)
+Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
 
 ---
 
