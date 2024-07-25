@@ -34,7 +34,7 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
  
 ## 4. Features & Commands
  The bot automatically sends news information on pre-selected channel. And provide match and ranking information to user's request by command.
- 
+
  * ```!ping```
     
     Returns time elapsed to crawl HLTV's main page
@@ -75,4 +75,4 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
 
  > Q. Program is dead while running.
  >
- > A. There is a critical flaw by HTTP connection pool exception. It occurs when you run this bot for long time(i estimate it is about 5 days). I really did a lot of googling to fix this. But i am sorry, i am too shit to fix this error. I suggest you to restart regularly by using scheduler.
+ > A. There is a critical flaw by HTTP connection pool exception. It occurs when you run this bot for long time(i estimate it is about 5 days). I really did lots of googling to fix this. But i am sorry, i am too shit to fix this error. I suggest you to restart regularly by using scheduler.
