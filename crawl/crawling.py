@@ -7,12 +7,20 @@ class CloudflareException(Exception):
 
 def scrap_website(link, timeout):
     scraper = cloudscraper.create_scraper()
-    res = scraper.get(link, timeout = timeout)
-    html = res.text
-    soup = BeautifulSoup(html, 'html.parser')
-    if "Just a moment" in soup.find("title").string:
-        raise CloudflareException
-    return soup
+    with scraper.get(link, timeout = timeout) as res:
+        res = scraper.get(link, timeout = timeout)
+        html = res.text
+        soup = BeautifulSoup(html, 'html.parser')
+        if "Just a moment" in soup.find("title").string:
+            raise CloudflareException
+        return soup
+
+    # res = scraper.get(link, timeout = timeout)
+    # html = res.text
+    # soup = BeautifulSoup(html, 'html.parser')
+    # if "Just a moment" in soup.find("title").string:
+    #     raise CloudflareException
+    # return soup
 
 def parse_newsdetail(main_soup, HLTV_MAIN):
     if main_soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
@@ -24,3 +32,6 @@ def parse_newsdetail(main_soup, HLTV_MAIN):
         return HLTV_MAIN + main_div.find_all("a")[1].attrs["href"]
     else:
         return HLTV_MAIN + main_div.find("a").attrs["href"]
+    
+if __name__ == "__main__":
+    print(scrap_website("http://hltv.org", 10))
