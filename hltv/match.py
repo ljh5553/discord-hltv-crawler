@@ -22,8 +22,7 @@ def parse_matches(main_soup):
             title = "-".join(title_temp_list).strip()
         else:
             title = title_temp
-            
-        
+
         team1 = team2 = "TBA"
         if match.select(".team"):
             team1 = match.select(".team")[0].text
@@ -150,7 +149,8 @@ def get_matches(match_infos, cmdtype : str, arg = None):
 
             embed.add_field(name = field_name, value = field_value, inline = False)
         
-        page_str = "page %s/%s" % (str(page_number + 1), pages_len)
+        now = datetime.datetime.now()
+        page_str = "page %s/%s - updated %s" % (str(page_number + 1), pages_len, now.strftime('%m/%d %H:%M'))
         embed.set_footer(text = page_str)
 
         pages.append(embed)

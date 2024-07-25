@@ -19,13 +19,13 @@ news_soup = None
 news_link = ""
 last_title = ""
 TOKEN = ""
-boradcast_channels = []
+broadcast_channels = []
 timeout = 10
 
 with open("config.json") as f:
     json_obj = json.load(f)
     TOKEN = json_obj["token"]
-    boradcast_channels = json_obj["channels"]
+    broadcast_channels = json_obj["channels"]
 
 intents = discord.Intents.default()
 intents.members = True
@@ -125,7 +125,7 @@ async def crawl_hltv():
         printlog("Exception occurred while crawling main pages. Retrying in 3 min...")
         traceback.print_exc()
 
-@tasks.loop(hours = 6)
+@tasks.loop(hours = 12)
 async def crawl_ranking():
     global ranking_soup
     HLTV_RANKING = "http://hltv.org/ranking/teams"
@@ -133,7 +133,7 @@ async def crawl_ranking():
     try:
         ranking_soup = crawl.crawling.scrap_website(HLTV_RANKING, timeout)
         printlog("Successfully crawled ranking page")
-        crawl_ranking.change_interval(hours = 6)
+        crawl_ranking.change_interval(hours = 12)
     except AttributeError:
         printlog("Exception AttributeError occurred while crawling ranking pages. Retrying in 3 min...")
         crawl_ranking.change_interval(minutes = 3)
@@ -158,7 +158,7 @@ async def article_reload():
             printlog("New article - %s" % new_article["article_title"])
             for guild in bot.guilds:
                 for channel in guild.channels:
-                    if channel.id in boradcast_channels:
+                    if channel.id in broadcast_channels:
                         await hltv.article.broadcast_article(channel, new_article, news_link)
                         last_title = new_article["article_title"]
     except AttributeError:
@@ -201,6 +201,26 @@ async def ranking(ctx, arg: str = None):
     except AttributeError:
         printlog("Exception AttributeError occurred while loading rankings")
         await send_unknownerror(ctx)
+
+@bot.command()
+async def newschannel(ctx):
+    with open("config.json", "r") as f:
+        json_obj = json.load(f)
+
+    req_channel = ctx.channel.id
+
+    if req_channel in broadcast_channels:
+        broadcast_channels.remove(req_channel)
+        json_obj["channels"].remove(req_channel)
+        await ctx.send("Removed from broadcast channel.")
+        
+    else:
+        broadcast_channels.append(req_channel)
+        json_obj["channels"].append(req_channel)
+        await ctx.send("Registered as a broadcast channel.")
+    
+    with open("config.json", "w") as f:
+        json.dump(json_obj, f)
 
 @bot.command()
 async def choose(ctx, *choices: str):

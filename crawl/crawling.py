@@ -15,13 +15,6 @@ def scrap_website(link, timeout):
             raise CloudflareException
         return soup
 
-    # res = scraper.get(link, timeout = timeout)
-    # html = res.text
-    # soup = BeautifulSoup(html, 'html.parser')
-    # if "Just a moment" in soup.find("title").string:
-    #     raise CloudflareException
-    # return soup
-
 def parse_newsdetail(main_soup, HLTV_MAIN):
     if main_soup.find("div", {"class" : "newsgrouping"}): # if there is live update (big events)
         main_div = main_soup.find_all("div", {"class" : "standard-box standard-list"})[1]

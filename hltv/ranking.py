@@ -1,5 +1,6 @@
 import re
 import discord
+import datetime
 
 def parse_rankings(ranking_soup):
     ranking_infos = []
@@ -91,7 +92,8 @@ def get_rankings(ranking_infos, arg = None):
 
             embed.add_field(name = field_name, value = field_value, inline= False)
         
-        page_str = "page %s/%s" % (str(page_number + 1), pages_len)
+        now = datetime.datetime.now()
+        page_str = "page %s/%s - updated %s" % (str(page_number + 1), pages_len, now.strftime('%m/%d %H:%M'))
         embed.set_footer(text = page_str)
 
         pages.append(embed)
