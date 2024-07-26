@@ -33,14 +33,21 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
  5. Done! If you want to set auto news broadcasting, type ```!newschannel``` in chat. It will automatically add the channel as news broadcasting.
  
 ## 4. Features & Commands
- The bot automatically sends news information on pre-selected channel. And provide match and ranking information to user's request by command.
+
+![demo_autonews](https://github.com/user-attachments/assets/59167e44-8a9b-4f69-b90c-052d3536c506)
+
+ The bot automatically sends news information on pre-selected channel.
+ 
+ Also, bot provides match and ranking information to user's request by command.
 
  * ```!ping```
     
     Returns time elapsed to crawl HLTV's main page
 
  * ```!match [ * | team name | event name | integer ]```
-    
+
+    ![demo_match](https://github.com/user-attachments/assets/2a0055f0-4c88-4c78-82df-3ad63330483f)
+
     Returns all match information. Parameter * filters HLTV recommend matches only. Parameter one word searches name of the team or event. Parameter integer limits search result.
 
  * ```!ongoing [ * | team name | event name | integer ]```
@@ -52,14 +59,20 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
     Returns upcoming match information. Parameter * filters HLTV recommend matches only. Parameter one word searches name of the team or event. Parameter integer limits search result.
 
  * ```!ranking [ team name | player name | integer ]```
-    
+   
+   ![demo_ranking](https://github.com/user-attachments/assets/b62e19bc-fb57-4c5c-8c0a-b1b448edfb96)
+
     Returns HLTV ranking information. Parameter one word searches name of the event or player. Parameter integer limits search result.
 
  * ```!newschannel```
     
+    ![demo_newschannel](https://github.com/user-attachments/assets/c61e2004-2c52-40e0-8d5f-b102fdc54d50)
+
     Set or remove the channel as news broadcasting channel. If HLTV has new article, bot detects and sends news' information to all broadcasting channels. Only server admin can use this command.
 
  * ```!choose [ option1 (option2 option3 ...) ]```
+
+   ![demo_choose](https://github.com/user-attachments/assets/891fda38-d734-42f5-9696-740ef3ef31a4)
     
     Select one of options randomly.
 
