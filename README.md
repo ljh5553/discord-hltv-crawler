@@ -57,7 +57,7 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
 
  * ```!newschannel```
     
-    Set or remove the channel as news broadcasting channel. If HLTV has new article, bot detects and sends news' information to all broadcasting channels.
+    Set or remove the channel as news broadcasting channel. If HLTV has new article, bot detects and sends news' information to all broadcasting channels. Only server admin can use this command.
 
  * ```!choose [ option1 (option2 option3 ...) ]```
     
