@@ -58,11 +58,11 @@ Discord bot for getting match, ranking, news from [HLTV.org](https://HLTV.org)
     
     Returns upcoming match information. Parameter * filters HLTV recommend matches only. Parameter one word searches name of the team or event. Parameter integer limits search result.
 
- * ```!ranking [ team name | player name | integer ]```
+ * ```!ranking [ team name | player name | integer(~integer) ]```
    
    ![demo_ranking](https://github.com/user-attachments/assets/b62e19bc-fb57-4c5c-8c0a-b1b448edfb96)
 
-    Returns HLTV ranking information. Parameter one word searches name of the event or player. Parameter integer limits search result.
+    Returns HLTV ranking information. Parameter one word searches name of the event or player. Parameter integer limits search result. If parameter is like *integer~integer*, bot will bring rankings between two integers. For example, ```!ranking 4~8``` brings information from 4th to 8th.
 
  * ```!newschannel```
     
