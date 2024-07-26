@@ -204,23 +204,27 @@ async def ranking(ctx, arg: str = None):
 
 @bot.command()
 async def newschannel(ctx):
-    with open("config.json", "r") as f:
-        json_obj = json.load(f)
+    if ctx.message.author.guild_permissions.administrator:
+        with open("config.json", "r") as f:
+            json_obj = json.load(f)
 
-    req_channel = ctx.channel.id
+        req_channel = ctx.channel.id
 
-    if req_channel in broadcast_channels:
-        broadcast_channels.remove(req_channel)
-        json_obj["channels"].remove(req_channel)
-        await ctx.send("Removed from broadcast channel.")
+        if req_channel in broadcast_channels:
+            broadcast_channels.remove(req_channel)
+            json_obj["channels"].remove(req_channel)
+            await ctx.send("Removed from broadcast channel.")
+            
+        else:
+            broadcast_channels.append(req_channel)
+            json_obj["channels"].append(req_channel)
+            await ctx.send("Registered as a broadcast channel.")
         
-    else:
-        broadcast_channels.append(req_channel)
-        json_obj["channels"].append(req_channel)
-        await ctx.send("Registered as a broadcast channel.")
+        with open("config.json", "w") as f:
+            json.dump(json_obj, f)
     
-    with open("config.json", "w") as f:
-        json.dump(json_obj, f)
+    else:
+        await ctx.send("Only server admin can set broadcasting channel.")
 
 @bot.command()
 async def choose(ctx, *choices: str):
